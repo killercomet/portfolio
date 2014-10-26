@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Portfolio Computation</title>
+  <meta charset="utf-8">
+  <meta name="description" content="Portfolio Computation">
+  <meta name="author" content="Guillermo Joaquin Corominas">
+  <meta name="generator" content="slidify" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/default.css" media="all" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/phone.css" 
+    media="only screen and (max-device-width: 480px)" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/slidify.css" >
+  <link rel="stylesheet" href="libraries/highlighters/highlight.js/css/tomorrow.css" />
+  <base target="_blank"> <!-- This amazingness opens all links in a new tab. -->  <link rel=stylesheet href="./assets/css/ribbons.css"></link>
+
+  
+  <!-- Grab CDN jQuery, fall back to local if offline -->
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+  <script>window.jQuery || document.write('<script src="libraries/widgets/quiz/js/jquery.js"><\/script>')</script> 
+  <script data-main="libraries/frameworks/io2012/js/slides" 
+    src="libraries/frameworks/io2012/js/require-1.0.8.min.js">
+  </script>
+  
+  
+
+</head>
+<body style="opacity: 0">
+  <slides class="layout-widescreen">
+    
+    <!-- LOGO SLIDE -->
+        <slide class="title-slide segue nobackground">
+  <hgroup class="auto-fadein">
+    <h1>Portfolio Computation</h1>
+    <h2>Computing Portfolios in R</h2>
+    <p>Guillermo Joaquin Corominas<br/></p>
+  </hgroup>
+  <article></article>  
+</slide>
+    
+
+    <!-- SLIDES -->
+    <slide class="" id="slide-1" style="background:;">
+  <hgroup>
+    <h2>Portfolio computation</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>This program allows you to compute a weighted portfolio of two assets and evaluate the returns and the volatility associated with the individual assets as well as the weighted portfolio. </p>
+
+<p>This is particularly useful to evaluate how would a combination of two assets work, for example, when we are trying to reduce the total volatility of a portfolio, but at the same time we are trying to maintain a high return of our investment. In this case we can combine a low risk/low return asset with a high risk/high return asset and obtain a more balanced combined portfolio. </p>
+
+<p>To use the program you must: </p>
+
+<ul>
+<li>Select the dates between you want to evaluate the performance of a weighted portfolio</li>
+<li>Select two different assets in the dropdown menus named &quot;Asset 1&quot; and &quot;Asset 2&quot;</li>
+<li>Select the weight allocated for the first asset (The weight allocated to the second asset is just
+100% minus the weight allocated for the first asset)</li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="class" id="id" style="background:;">
+  <hgroup>
+    <h2>Example of computation 1/2. Loading data.</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>For example, we can load data for APPLE and EXXON and evaluate the performance of both assets in a period of time between &#39;2014-09-01&#39; and &#39;2014-10-24&#39; and allocate a 25% for the first asset.</p>
+
+<pre><code class="r">date1 &lt;- as.Date(&#39;2014-09-01&#39;) ;date2 &lt;- as.Date(&#39;2014-10-24&#39;);weight &lt;- 0.25
+symbol1 &lt;- read.csv(&quot;./APPL.csv&quot;, sep=&quot;,&quot;); symbol2 &lt;- read.csv(&quot;./XOM.csv&quot;, sep=&quot;,&quot;)
+symbols &lt;- data.frame(date=symbol1$Date, symbol1=symbol1$Adj, symbol2=symbol2$Adj)
+#Subset the data for the selected period
+symbols$date &lt;- as.Date(symbols$date)
+Seq &lt;- seq.Date(date1,date2,by=&quot;day&quot;); symbolSub &lt;- symbols[symbols$date %in% Seq,]
+#Normalize data
+symbolSub$symbol1 &lt;- (symbolSub$symbol1/symbolSub$symbol1[length(symbolSub$symbol1)])
+symbolSub$symbol2 &lt;- (symbolSub$symbol2/symbolSub$symbol2[length(symbolSub$symbol2)])
+symbolSub$weighted &lt;- symbolSub$symbol1*weight + symbolSub$symbol2 * (1- weight)
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="class" id="id" style="background:;">
+  <hgroup>
+    <h2>Example of computation 2/2. Computing volatility and returns.</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>Now we compute the returns and volatility for both assets and the weighted portfolio. </p>
+
+<pre><code class="r">#Compute returns 
+return1 &lt;- round(((symbolSub$symbol1[1] / symbolSub$symbol1[length(symbolSub$symbol1)])-1)* 100, 2) 
+return2 &lt;- round(((symbolSub$symbol2[1] / symbolSub$symbol2[length(symbolSub$symbol2)])-1)* 100, 2)
+returnWeighted &lt;- round(((symbolSub$weighted[1] / symbolSub$weighted[length(symbolSub$weighted)])-1)*100, 2)
+#Compute sds
+sd1 &lt;- round(sd(symbolSub$symbol1)*100, 2)
+sd2 &lt;- round(sd(symbolSub$symbol2)*100, 2)
+sdw &lt;- round(sd(symbolSub$weighted)*100, 2)
+</code></pre>
+
+<p>As we see, the return of APPL is 1.86 and its volatility is 1.9. Exxon has a return of -4.06 and volatility of 2.59. The weighted portfolio returns -2.58 and has 2.1 volatility which is something in between but closer to EXXON because of the 75% allocation.</p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="class" id="id" style="background:;">
+  <hgroup>
+    <h2>Plotting the result</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>We can see the result of our computation by plotting using ggplot2. It is clear that our combined portfolio is located between both our assets. </p>
+
+<p><img src="assets/fig/unnamed-chunk-3-1.png" alt="plot of chunk unnamed-chunk-3"> </p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+    <slide class="backdrop"></slide>
+  </slides>
+  <div class="pagination pagination-small" id='io2012-ptoc' style="display:none;">
+    <ul>
+      <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=1 title='Portfolio computation'>
+         1
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=2 title='Example of computation 1/2. Loading data.'>
+         2
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=3 title='Example of computation 2/2. Computing volatility and returns.'>
+         3
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=4 title='Plotting the result'>
+         4
+      </a>
+    </li>
+  </ul>
+  </div>  <!--[if IE]>
+    <script 
+      src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js">  
+    </script>
+    <script>CFInstall.check({mode: 'overlay'});</script>
+  <![endif]-->
+</body>
+  <!-- Load Javascripts for Widgets -->
+  
+  <!-- LOAD HIGHLIGHTER JS FILES -->
+  <script src="libraries/highlighters/highlight.js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <!-- DONE LOADING HIGHLIGHTER JS FILES -->
+   
+  </html>
